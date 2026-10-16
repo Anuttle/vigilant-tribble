@@ -1,0 +1,384 @@
+<title>Star Catcher Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: night-sky workbench. Game and code side by side, lesson notes below like a field guide. Single dark theme on purpose: it's the game's sky. */
+:root {
+  --sky: #0d1233;
+  --panel: #161d4a;
+  --panel-2: #1e2760;
+  --ink: #eceeff;
+  --muted: #a3abdc;
+  --star: #ffd447;
+  --basket: #ff7ab6;
+  --line: #2c3676;
+  --display: "Silkscreen", "Courier New", monospace;
+  --body: "Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+textarea, pre, code, kbd { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font: 17px/1.6 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 18%, #ffffff55 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 78% 9%, #ffffff44 50%, transparent 51%),
+    radial-gradient(2px 2px at 91% 34%, #ffd44766 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 33% 6%, #ffffff33 50%, transparent 51%);
+  background-repeat: no-repeat;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 40px; }
+
+header { display: grid; gap: 8px; }
+.eyebrow { font: 700 13px var(--display); letter-spacing: .12em; color: var(--basket); text-transform: uppercase; }
+h1 { font: 700 clamp(40px, 7vw, 68px)/1 var(--display); margin: 0; color: var(--star); text-wrap: balance; text-shadow: 0 0 24px #ffd44740; }
+.lede { margin: 0; max-width: 62ch; color: var(--muted); font-size: 18px; }
+.lede strong { color: var(--ink); }
+
+.lab { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .lab { grid-template-columns: minmax(0, 1fr); } }
+
+.screen { display: grid; gap: 12px; }
+.screen iframe {
+  width: 100%; max-width: 420px; aspect-ratio: 1 / 1; display: block;
+  border: 3px solid var(--line); border-radius: 6px; background: #0b1030;
+}
+.screen iframe:focus-within, .screen iframe:focus { border-color: var(--star); }
+.hint { margin: 0; font-size: 14px; color: var(--muted); }
+kbd { font: 600 12px var(--mono); background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; color: var(--ink); }
+
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: 700 13px var(--display); letter-spacing: .06em; text-transform: uppercase;
+  border: 2px solid var(--line); background: var(--panel); color: var(--ink);
+  padding: 10px 14px; border-radius: 4px; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button:focus-visible { outline: 3px solid var(--star); outline-offset: 2px; }
+button.go { background: var(--star); color: #1a1530; border-color: var(--star); }
+button.go:hover { filter: brightness(1.08); }
+.status { font: 13px var(--mono); color: var(--muted); min-height: 1.4em; }
+
+.editor { display: grid; gap: 8px; min-width: 0; }
+.editor-bar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.editor-bar span { font: 700 13px var(--display); letter-spacing: .1em; color: var(--muted); text-transform: uppercase; }
+textarea {
+  width: 100%; min-height: 560px; resize: vertical;
+  font: 14px/1.55 var(--mono); tab-size: 2;
+  background: var(--panel); color: var(--ink);
+  border: 2px solid var(--line); border-radius: 6px; padding: 16px;
+  white-space: pre; overflow: auto;
+}
+textarea:focus { outline: none; border-color: var(--star); }
+
+h2 { font: 700 26px/1.15 var(--display); margin: 0; color: var(--ink); text-wrap: balance; }
+h2 em { font-style: normal; color: var(--star); }
+section { display: grid; gap: 16px; }
+section > p { margin: 0; max-width: 65ch; color: var(--muted); }
+
+.parts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+.parts li { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.parts .n { font: 700 12px var(--display); color: var(--basket); letter-spacing: .1em; }
+.parts b { font-size: 18px; }
+.parts p { margin: 0; font-size: 15px; color: var(--muted); }
+code { font: 0.88em var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 3px; color: var(--star); }
+
+.quests { display: grid; gap: 12px; }
+.quest { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.lvl { font: 700 12px/1.2 var(--display); color: var(--sky); background: var(--star); border-radius: 4px; padding: 8px 4px; text-align: center; align-self: start; }
+.quest[data-lvl="3"] .lvl, .quest[data-lvl="4"] .lvl { background: var(--basket); }
+.quest h3 { margin: 0 0 4px; font-size: 19px; }
+.quest p { margin: 0 0 8px; color: var(--muted); max-width: 62ch; }
+details summary { cursor: pointer; color: var(--star); font-size: 15px; }
+details summary:focus-visible { outline: 2px solid var(--star); outline-offset: 2px; }
+details pre { margin: 8px 0 0; background: var(--sky); border: 1px solid var(--line); border-radius: 4px; padding: 12px; overflow-x: auto; font: 13px/1.5 var(--mono); color: var(--ink); }
+details > p { margin-top: 8px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Learn to code with games · Lesson 1</div>
+    <h1>Star Catcher</h1>
+    <p class="lede">Play the game, then change its code. <strong>Every game is a loop</strong> that does two things about 60 times a second: update the numbers, then draw the picture. Edit anything on the right and press <strong>Run</strong> to see what happens. You can't break anything; <strong>Reset</strong> brings the original back.</p>
+  </header>
+
+  <div class="lab">
+    <div class="screen">
+      <iframe id="frame" title="Star Catcher game" sandbox="allow-scripts"></iframe>
+      <p class="hint">Click the game, then use <kbd>←</kbd> <kbd>→</kbd>. On a phone, drag your finger across it.</p>
+      <div class="buttons">
+        <button class="go" id="run" type="button">▶ Run</button>
+        <button id="reset" type="button">Reset code</button>
+        <button id="copy" type="button">Copy code</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+    </div>
+
+    <div class="editor">
+      <div class="editor-bar"><span>The code</span><span>JavaScript</span></div>
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Game code"></textarea>
+    </div>
+  </div>
+
+  <section>
+    <h2>The five parts of <em>every</em> game</h2>
+    <p>The code is split into five numbered parts. Almost every game you'll ever make, from Pong to Minecraft, has these same pieces.</p>
+    <ol class="parts">
+      <li><span class="n">PART 1</span><b>Setup</b><p>Grab the <code>canvas</code>, the blank rectangle we paint on. <code>ctx</code> is our paintbrush.</p></li>
+      <li><span class="n">PART 2</span><b>Variables</b><p>The game's memory. <code>let score = 0</code> makes a box named score holding 0. <code>let</code> can change later; <code>const</code> can't.</p></li>
+      <li><span class="n">PART 3</span><b>Input</b><p>Event listeners wait for the player. When a key goes down, we write it into <code>keys</code>.</p></li>
+      <li><span class="n">PART 4</span><b>Functions</b><p>Named recipes. <code>update()</code> changes the numbers; <code>draw()</code> paints them. <code>if</code> lets the game make decisions.</p></li>
+      <li><span class="n">PART 5</span><b>Game loop</b><p><code>loop()</code> calls update, then draw, then asks the browser to run it again next frame. Forever.</p></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Quests</h2>
+    <p>Do these in order. Each one teaches a new idea. Try it yourself before opening the hint.</p>
+    <div class="quests">
+      <div class="quest" data-lvl="1">
+        <div class="lvl">LVL 1</div>
+        <div>
+          <h3>Paint job</h3>
+          <p>Change the basket's color and the sky's color. Colors like <code>"#ff7ab6"</code> are hex codes, and plain words like <code>"lime"</code> work too.</p>
+          <details><summary>Hint</summary><p>Look inside <code>draw()</code> for <code>ctx.fillStyle</code>. The line right before the basket is drawn sets its color.</p></details>
+        </div>
+      </div>
+      <div class="quest" data-lvl="2">
+        <div class="lvl">LVL 2</div>
+        <div>
+          <h3>Easy mode</h3>
+          <p>Make the basket wider and faster, and give the player 5 lives. You only need to change numbers.</p>
+          <details><summary>Hint</summary><p>All of these live in Part 2. Lives appear in two places: the start, and inside <code>restart()</code>.</p></details>
+        </div>
+      </div>
+      <div class="quest" data-lvl="3">
+        <div class="lvl">LVL 3</div>
+        <div>
+          <h3>It gets harder</h3>
+          <p>Make stars fall faster as your score goes up. This is how real games add difficulty.</p>
+          <details><summary>Hint</summary><p>In <code>makeStar()</code>, the fall speed is <code>2 + Math.random() * 2</code>. Add something that grows with <code>score</code>:</p><pre>fall: 2 + Math.random() * 2 + score * 0.1</pre></details>
+        </div>
+      </div>
+      <div class="quest" data-lvl="4">
+        <div class="lvl">LVL 4</div>
+        <div>
+          <h3>Watch out for rocks</h3>
+          <p>Some falling things should be grey rocks. Catching a rock costs a life instead of scoring a point.</p>
+          <details><summary>Hint 1</summary><p>Give each star a true/false value when it's made: <code>rock: Math.random() &lt; 0.2</code> means "20% chance of being a rock".</p></details>
+          <details><summary>Hint 2</summary><p>When drawing, pick the color with an <code>if</code>. When catching, check it too:</p><pre>if (star.rock) {
+  lives = lives - 1;
+} else {
+  score = score + 1;
+}</pre><p>One more thing: a rock that falls off the bottom shouldn't cost a life.</p></details>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="text/plain" id="starter">
+// ============ STAR CATCHER ============
+// Move the basket with the LEFT and RIGHT arrow keys
+// (or drag on the game). Catch the stars. Miss 3 and it's over.
+
+// ----- 1. SETUP: get the canvas we draw on -----
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// ----- 2. VARIABLES: the game's memory -----
+let basketX = 160;        // left edge of the basket, in pixels
+const basketY = 360;      // how far down the basket sits
+const basketWidth = 80;   // try making this bigger!
+const basketSpeed = 6;    // pixels moved per frame
+let stars = [];           // a list that holds every falling star
+let score = 0;
+let lives = 3;
+let keys = {};            // remembers which keys are held down
+
+// ----- 3. INPUT: listen to the keyboard and mouse -----
+document.addEventListener("keydown", function (event) {
+  keys[event.key] = true;
+  if (event.key === " " && lives <= 0) restart();
+});
+document.addEventListener("keyup", function (event) {
+  keys[event.key] = false;
+});
+canvas.addEventListener("pointermove", function (event) {
+  const box = canvas.getBoundingClientRect();
+  const x = (event.clientX - box.left) * (canvas.width / box.width);
+  basketX = x - basketWidth / 2;
+});
+canvas.addEventListener("pointerdown", function () {
+  if (lives <= 0) restart();
+});
+
+// ----- 4. FUNCTIONS: reusable chunks of code -----
+function makeStar() {
+  stars.push({
+    x: 10 + Math.random() * (canvas.width - 20), // random spot across the top
+    y: -10,                                       // start just above the screen
+    fall: 2 + Math.random() * 2                   // each star falls at its own speed
+  });
+}
+
+function restart() {
+  stars = [];
+  score = 0;
+  lives = 3;
+}
+
+// update() changes the numbers: movement, catching, missing
+function update() {
+  if (lives <= 0) return; // game over: stop changing things
+
+  if (keys["ArrowLeft"]) basketX = basketX - basketSpeed;
+  if (keys["ArrowRight"]) basketX = basketX + basketSpeed;
+
+  // keep the basket on the screen
+  if (basketX < 0) basketX = 0;
+  if (basketX > canvas.width - basketWidth) basketX = canvas.width - basketWidth;
+
+  // about 2 times in 100 frames, add a new star
+  if (Math.random() < 0.02) makeStar();
+
+  for (const star of stars) {
+    star.y = star.y + star.fall;
+
+    const inBasketHeight = star.y > basketY && star.y < basketY + 16;
+    const inBasketWidth = star.x > basketX && star.x < basketX + basketWidth;
+
+    if (inBasketHeight && inBasketWidth) {
+      star.gone = true;   // caught it!
+      score = score + 1;
+    } else if (star.y > canvas.height) {
+      star.gone = true;   // it fell off the bottom
+      lives = lives - 1;
+    }
+  }
+
+  // keep only the stars that are not gone
+  stars = stars.filter(function (star) { return !star.gone; });
+}
+
+// draw() paints the picture using the numbers
+function draw() {
+  // sky
+  ctx.fillStyle = "#0b1030";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // stars
+  ctx.fillStyle = "#ffd447";
+  for (const star of stars) {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // basket
+  ctx.fillStyle = "#ff7ab6";
+  ctx.fillRect(basketX, basketY, basketWidth, 16);
+
+  // score and lives
+  ctx.fillStyle = "white";
+  ctx.font = "18px monospace";
+  ctx.fillText("Score: " + score, 12, 28);
+  ctx.fillText("Lives: " + lives, 300, 28);
+
+  if (lives <= 0) {
+    ctx.textAlign = "center";
+    ctx.font = "32px monospace";
+    ctx.fillText("GAME OVER", 200, 190);
+    ctx.font = "16px monospace";
+    ctx.fillText("Press Space or tap to play again", 200, 225);
+    ctx.textAlign = "left";
+  }
+}
+
+// ----- 5. THE GAME LOOP: runs about 60 times every second -----
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+<script>
+(function () {
+  const STORE = "star-catcher-code-v1";
+  const starter = document.getElementById("starter").textContent.replace(/^\n/, "");
+  const code = document.getElementById("code");
+  const frame = document.getElementById("frame");
+  const status = document.getElementById("status");
+
+  let saved = null;
+  try { saved = localStorage.getItem(STORE); } catch (e) {}
+  code.value = saved || starter;
+
+  const head =
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    'html,body{margin:0;background:#0b1030;overflow:hidden;height:100%}' +
+    'canvas{display:block;width:100%;height:auto;touch-action:none}' +
+    '#err{position:absolute;left:0;right:0;bottom:0;margin:0;padding:10px 12px;background:#b3123fee;color:#fff;font:13px/1.4 monospace;white-space:pre-wrap}' +
+    '#err:empty{display:none}</style></head><body>' +
+    '<canvas id="game" width="400" height="400"></canvas><pre id="err"></pre>\n' +
+    '<script>window.addEventListener("keydown",function(e){if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].indexOf(e.key)>-1)e.preventDefault();});' +
+    'window.onerror=function(m,s,l){document.getElementById("err").textContent="Oops! Line "+(l-__OFFSET__)+" of your code:\\n"+m;parent.postMessage({sc:"err"},"*");};<\/script>\n' +
+    '<script>\n';
+  const offset = head.split("\n").length - 1;
+
+  function run() {
+    const src = code.value;
+    try { localStorage.setItem(STORE, src); } catch (e) {}
+    frame.onload = function () { try { frame.contentWindow.focus(); } catch (e) {} };
+    frame.srcdoc = head.replace("__OFFSET__", offset) + src.replace(/<\/script/gi, "<\\/script") + "\n<\/script></body></html>";
+    status.textContent = "Running. Click the game to play.";
+  }
+
+  window.addEventListener("message", function (e) {
+    if (e.source === frame.contentWindow && e.data && e.data.sc === "err") {
+      status.textContent = "Your code has an error. Read the red message on the game.";
+    }
+  });
+
+  document.getElementById("run").addEventListener("click", run);
+  document.getElementById("reset").addEventListener("click", function () {
+    code.value = starter;
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    run();
+    status.textContent = "Code reset to the original.";
+  });
+  document.getElementById("copy").addEventListener("click", function () {
+    navigator.clipboard.writeText(code.value).then(
+      function () { status.textContent = "Copied."; },
+      function () { code.focus(); code.select(); status.textContent = "Code selected. Press Ctrl+C (or ⌘C) to copy."; }
+    );
+  });
+
+  // Tab key inserts two spaces instead of leaving the editor; Ctrl/⌘+Enter runs.
+  code.addEventListener("keydown", function (e) {
+    if (e.key === "Tab" && !e.shiftKey) {
+      e.preventDefault();
+      const s = code.selectionStart, end = code.selectionEnd;
+      code.value = code.value.slice(0, s) + "  " + code.value.slice(end);
+      code.selectionStart = code.selectionEnd = s + 2;
+    } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      run();
+    }
+  });
+
+  run();
+  status.textContent = "Click the game to play. Ctrl+Enter in the code runs it too.";
+})();
+</script>

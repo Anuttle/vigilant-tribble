@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Star Catcher</title>
+  <style>
+    body { margin: 0; background: #0b1030; display: grid; place-items: center; height: 100vh; }
+    canvas { width: min(90vw, 90vh); touch-action: none; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="400" height="400"></canvas>
+  <script>
+// ============ STAR CATCHER ============
+// Move the basket with the LEFT and RIGHT arrow keys
+// (or drag on the game). Catch the stars. Miss 3 and it's over.
+
+// ----- 1. SETUP: get the canvas we draw on -----
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+// ----- 2. VARIABLES: the game's memory -----
+let basketX = 160;        // left edge of the basket, in pixels
+const basketY = 360;      // how far down the basket sits
+const basketWidth = 80;   // try making this bigger!
+const basketSpeed = 6;    // pixels moved per frame
+let stars = [];           // a list that holds every falling star
+let score = 0;
+let lives = 3;
+let keys = {};            // remembers which keys are held down
+
+// ----- 3. INPUT: listen to the keyboard and mouse -----
+document.addEventListener("keydown", function (event) {
+  keys[event.key] = true;
+  if (event.key === " " && lives <= 0) restart();
+});
+document.addEventListener("keyup", function (event) {
+  keys[event.key] = false;
+});
+canvas.addEventListener("pointermove", function (event) {
+  const box = canvas.getBoundingClientRect();
+  const x = (event.clientX - box.left) * (canvas.width / box.width);
+  basketX = x - basketWidth / 2;
+});
+canvas.addEventListener("pointerdown", function () {
+  if (lives <= 0) restart();
+});
+
+// ----- 4. FUNCTIONS: reusable chunks of code -----
+function makeStar() {
+  stars.push({
+    x: 10 + Math.random() * (canvas.width - 20), // random spot across the top
+    y: -10,                                       // start just above the screen
+    fall: 2 + Math.random() * 2                   // each star falls at its own speed
+  });
+}
+
+function restart() {
+  stars = [];
+  score = 0;
+  lives = 3;
+}
+
+// update() changes the numbers: movement, catching, missing
+function update() {
+  if (lives <= 0) return; // game over: stop changing things
+
+  if (keys["ArrowLeft"]) basketX = basketX - basketSpeed;
+  if (keys["ArrowRight"]) basketX = basketX + basketSpeed;
+
+  // keep the basket on the screen
+  if (basketX < 0) basketX = 0;
+  if (basketX > canvas.width - basketWidth) basketX = canvas.width - basketWidth;
+
+  // about 2 times in 100 frames, add a new star
+  if (Math.random() < 0.02) makeStar();
+
+  for (const star of stars) {
+    star.y = star.y + star.fall;
+
+    const inBasketHeight = star.y > basketY && star.y < basketY + 16;
+    const inBasketWidth = star.x > basketX && star.x < basketX + basketWidth;
+
+    if (inBasketHeight && inBasketWidth) {
+      star.gone = true;   // caught it!
+      score = score + 1;
+    } else if (star.y > canvas.height) {
+      star.gone = true;   // it fell off the bottom
+      lives = lives - 1;
+    }
+  }
+
+  // keep only the stars that are not gone
+  stars = stars.filter(function (star) { return !star.gone; });
+}
+
+// draw() paints the picture using the numbers
+function draw() {
+  // sky
+  ctx.fillStyle = "#0b1030";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // stars
+  ctx.fillStyle = "#ffd447";
+  for (const star of stars) {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // basket
+  ctx.fillStyle = "#ff7ab6";
+  ctx.fillRect(basketX, basketY, basketWidth, 16);
+
+  // score and lives
+  ctx.fillStyle = "white";
+  ctx.font = "18px monospace";
+  ctx.fillText("Score: " + score, 12, 28);
+  ctx.fillText("Lives: " + lives, 300, 28);
+
+  if (lives <= 0) {
+    ctx.textAlign = "center";
+    ctx.font = "32px monospace";
+    ctx.fillText("GAME OVER", 200, 190);
+    ctx.font = "16px monospace";
+    ctx.fillText("Press Space or tap to play again", 200, 225);
+    ctx.textAlign = "left";
+  }
+}
+
+// ----- 5. THE GAME LOOP: runs about 60 times every second -----
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+  </script>
+</body>
+</html>
